@@ -1,0 +1,3 @@
+pycryptodome
+asn1
+future
