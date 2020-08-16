@@ -21,40 +21,40 @@ from Crypto.Util import Counter
 from Crypto.Cipher import AES
 from Crypto.IO import PEM
 from eXnut.utils import get_priv_key_der
+from typing import NoReturn
 
 class CAL0:
 	def __init__(self):
-		self.serialNumber = None
-		self.sslCertificate = None
-		self.rsa2048ETicketCertificate = None
-		self.deviceId = None
-		self.extendedSslKey = None
+		self.serial_number = None
+		self.ssl_certificate = None
+		self.rsa_2048_eticket_certificate = None
+		self.device_id = None
+		self.ssl_key = None
 
-	def readFile(self, filePath: Path, ssl_rsa_kek: bytes):
+	def read_file(self, filePath: Path, ssl_rsa_kek: bytes) -> NoReturn:
 		'''Read an external file and load CAL0 information to instance'''
-		with open(filePath, 'rb') as cal0Stream:
-			cal0 = cal0Stream.read()
+		with open(filePath, 'rb') as cal0_stream:
+			cal0 = cal0_stream.read()
 			if int.from_bytes(cal0[0x0:0x4], byteorder='little', signed=False) == 810303811:
-				self.serialNumber = cal0[0x250:0x25E].decode('utf-8')
-				sslCertificateSize = int.from_bytes(cal0[0xAD0:0xAD4], byteorder='little', signed=False)
-				self.sslCertificate = cal0[0xAE0:0xAE0+sslCertificateSize]
-				self.rsa2048ETicketCertificate = cal0[0x2A90:0x2CD0]
-				self.deviceId = hexlify(cal0[0x35E0:0x35E8]).decode('utf-8')
+				self.serial_number = cal0[0x250:0x25E].decode('utf-8')
+				ssl_certificate_size = int.from_bytes(cal0[0xAD0:0xAD4], byteorder='little', signed=False)
+				self.ssl_certificate = cal0[0xAE0:0xAE0+ssl_certificate_size]
+				self.rsa_2048_eticket_certificate = cal0[0x2A90:0x2CD0]
+				self.device_id = hexlify(cal0[0x35E0:0x35E8]).decode('utf-8')
 				ctr = Counter.new(128, initial_value=int(hexlify(cal0[0x3AE0:0x3AF0]), 16))
 				dec = AES.new(ssl_rsa_kek, AES.MODE_CTR, counter=ctr).decrypt(cal0[0x3AF0:0x3C10])
-				self.extendedSslKey = get_priv_key_der(self.sslCertificate, dec[:0x100])
+				self.ssl_key = get_priv_key_der(self.ssl_certificate, dec[:0x100])
 			else:
 				raise RuntimeError(f'{filePath} is not a valid CAL0 file!')
 
-	def getPEMCertificate(self):
+	def extract_ssl_cert_key_pem(self) -> NoReturn:
 		'''Extract the SSL certificate and key in PEM encoded format.
 		
 		It write to a file named <DEVICE_ID>.pem, where DEVICE_ID is
 		the device ID extracted from the certificate.
 		'''
-		outPath = Path(f'./{self.deviceId}.pem')
-		sslPemFile = open(outPath, 'w')
-		sslPemFile.write(PEM.encode(self.sslCertificate, 'CERTIFICATE'))
-		sslPemFile.write('\n')
-		sslPemFile.write(PEM.encode(self.extendedSslKey, 'RSA PRIVATE KEY'))
-		sslPemFile.close()
+		out_path = Path(f'./{self.device_id}.pem')
+		with open(out_path, 'w') as ssl_pem_stream:
+			ssl_pem_stream.write(PEM.encode(self.ssl_certificate, 'CERTIFICATE'))
+			ssl_pem_stream.write('\n')
+			ssl_pem_stream.write(PEM.encode(self.ssl_key, 'RSA PRIVATE KEY'))

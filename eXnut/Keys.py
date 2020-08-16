@@ -17,24 +17,25 @@
 
 from pathlib import Path
 from binascii import unhexlify
+from typing import NoReturn
 
 class Keys:
 	def __init__(self):
 		pass
 
-	def readFile(self, keysFilePath: Path):
+	def read_file(self, keys_file_path: Path) -> NoReturn:
 		'''Read an external file and load keys from the file'''
 		keys = {}
-		with open(keysFilePath, 'r') as keysStream:
-			rawKeyLines = keysStream.readlines()
-			for rawKeyLine in rawKeyLines:
-				[keyname, keyvalue] = rawKeyLine.replace('\n', '').replace(' ', '').split('=')
-				keys.update({keyname: unhexlify(keyvalue)})
+		with open(keys_file_path, 'r') as keys_stream:
+			raw_key_lines = keys_stream.readlines()
+			for raw_key_line in raw_key_lines:
+				[key_name, key_value] = raw_key_line.replace('\n', '').replace(' ', '').split('=')
+				keys.update({key_name: unhexlify(key_value)})
 		self.__dict__.update(keys)
 
-	def getKey(self, keyname: str) -> bytes:
+	def get_key(self, key_name: str) -> bytes:
 		'''Attempt to get a key from keyname'''
-		if keyname in self.__dict__.keys():
-			return self.__dict__[keyname]
+		if key_name in self.__dict__.keys():
+			return self.__dict__[key_name]
 		else:
 			return b''

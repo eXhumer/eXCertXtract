@@ -20,13 +20,14 @@
 # - SciresM
 # - SocraticBliss
 
+from typing import Tuple
 from fractions import gcd
 from hashlib import sha256
 from random import randint
 from binascii import hexlify
 from asn1 import Decoder as ASN1Decoder, Encoder as ASN1Encoder
 
-def extended_gcd(aa, bb):
+def extended_gcd(aa: int, bb: int) -> Tuple[int, int, int]:
 	'''Extended Euclidean algorithm'''
 	lastremainder, remainder = abs(aa), abs(bb)
 	x, lastx, y, lasty = 0, 1, 1, 0
@@ -36,14 +37,14 @@ def extended_gcd(aa, bb):
 		y, lasty = lasty - quotient*y, y
 	return lastremainder, lastx * (-1 if aa < 0 else 1), lasty * (-1 if bb < 0 else 1)
 
-def modinv(a, m):
+def modinv(a: int, m: int) -> int:
 	'''Function to perform modular multiplicative inversion'''
 	g, x, _ = extended_gcd(a, m)
 	if g != 1:
 		raise ValueError
 	return x % m
 
-def get_primes(D, N, E = 0x10001):
+def get_primes(D: int, N: int, E: int = 0x10001) -> Tuple[int, int]:
 	'''Computes P, Q given E,D where pow(pow(X, D, N), E, N) == X'''
 	assert(pow(pow(0xCAFEBABE, D, N), E, N) == 0xCAFEBABE) # Check privk validity
 	# code taken from https://stackoverflow.com/a/28299742
@@ -79,7 +80,7 @@ def get_primes(D, N, E = 0x10001):
 		p, q = q, p
 	return (p, q)
 
-def get_pubk(clcert):
+def get_pubk(clcert: bytes) -> Tuple[int, int]:
 	'''Function to get the RSA public key and modulus from Nintendo Switch SSL certificate'''
 	clcert_decoder = ASN1Decoder()
 	clcert_decoder.start(clcert)
@@ -104,7 +105,7 @@ def get_pubk(clcert):
 	_, E = rsa_decoder.read()
 	return (E, N)
 
-def get_priv_key_der(clcert, privk):
+def get_priv_key_der(clcert: bytes, privk: bytes) -> bytes:
 	'''Function to generate the private key in DER format from Nintendo Switch SSL Certificate and raw private exponent.'''
 
 	if len(privk) != 0x100:

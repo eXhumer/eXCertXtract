@@ -26,34 +26,34 @@ from sys import argv
 
 def main():
 	if len(argv) == 3:
-		cal0Path = Path(argv[1])
-		keysPath = Path(argv[2])
+		cal0_path = Path(argv[1])
+		keys_path = Path(argv[2])
 
-		if not cal0Path.exists():
-			raise RuntimeError(f'CAL0 file specified {cal0Path} doesn\'t exist!')
+		if not cal0_path.exists():
+			raise RuntimeError(f'CAL0 file specified {cal0_path} doesn\'t exist!')
 
-		if not keysPath.exists():
-			raise RuntimeError(f'Keys file specified {keysPath} doesn\'t exist!')
+		if not keys_path.exists():
+			raise RuntimeError(f'Keys file specified {keys_path} doesn\'t exist!')
 
 		cal0 = CAL0()
 		keys = Keys()
 
-		keys.readFile(keysPath)
-		ssl_rsa_kek = keys.getKey('ssl_rsa_kek')
+		keys.read_file(keys_path)
+		ssl_rsa_kek = keys.get_key('ssl_rsa_kek')
 
 		if verify_ssl_rsa_kek(ssl_rsa_kek):
-			cal0.readFile(cal0Path, ssl_rsa_kek)
+			cal0.read_file(cal0_path, ssl_rsa_kek)
 			
 		else:
 			raise RuntimeError(f'ssl_rsa_kek in keys file is invalid!')
 
-		print(f'Device ID: {cal0.deviceId}')
-		print(f'Serial Number: {cal0.serialNumber}')
-		cal0.getPEMCertificate()
-		print('Extracted Nintendo Switch SSL certificate and key successfully!')
+		print(f'Device ID: {cal0.device_id}')
+		print(f'Serial Number: {cal0.serial_number}')
+		cal0.extract_ssl_cert_key_pem()
+		print(f'Extracted Nintendo Switch SSL certificate and key successfully to {cal0.device_id}.pem!')
 
 	else:
-		raise RuntimeError('Usage: python ssl_extract.py CAL0_FILE_PATH KEYS_FILE_PATH')
+		raise RuntimeError(f'Usage: python {__file__} CAL0_FILE_PATH KEYS_FILE_PATH')
 
 if __name__ == '__main__':
 	main()
